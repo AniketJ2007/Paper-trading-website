@@ -1,0 +1,263 @@
+import YahooFinance from "yahoo-finance2";
+import asynchandler from "../utils/asynchandler";
+import { Request, Response } from "express";
+import { ApiError } from "../utils/ApiError";
+import { db } from "..";
+import { Orders, Users } from "../db/schema";
+import { eq } from "drizzle-orm";
+import { BuyNormal, SellNormal } from "./stock.controller";
+
+const yahooFinance = new YahooFinance({ suppressNotices: ["yahooSurvey"] });
+interface ApiRequest extends Request {
+  user?: {
+    id: number;
+    email: string;
+    name: string;
+    balance: string;
+  };
+}
+const searchdata = asynchandler(async (req: ApiRequest, res: Response) => {
+  const { symbol } = req.body;
+  if (!symbol) {
+    throw new ApiError(400, "All fields required");
+  }
+  const r1 = await yahooFinance.search(symbol, {
+    region: "IN",
+    enableFuzzyQuery: true,
+    newsCount: 0,
+    quotesCount: 10,
+  });
+  const equities = r1.quotes.filter(
+    (q) => "quoteType" in q && q.quoteType === "EQUITY",
+  );
+  return res.status(200).json({
+    data: equities,
+    message: "Data fetched",
+  });
+});
+interface StockOrder {
+  id: number;
+  user_id: number;
+  symbol: string;
+  order_type: string;
+  status: string;
+  quantity: number;
+  price: string;
+  created_at?: Date;
+  filled_at?: Date;
+}
+// 1. Fix isNSEOpen to return false on weekends
+const isNSEOpen = () => {
+  const now = new Date();
+  const istTime = new Date(
+    now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
+  );
+  
+  const day = istTime.getDay();
+  if (day === 6 || day === 0) return false;
+
+  const hours = istTime.getHours();
+  const minutes = istTime.getMinutes();
+  const currentMinutes = hours * 60 + minutes;
+  
+  const marketOpen = 9 * 60 + 15;
+  const marketClose = 15 * 60 + 30;
+
+  return currentMinutes >= marketOpen && currentMinutes <= marketClose;
+};
+
+
+
+// Result: 'period' now holds the most recent valid market closing timestamp.
+
+const stockData = async (req: Request, res: Response) => {
+  const { symbol, interval } = req.body;
+  type ValidInterval =
+    | "1m"
+    | "2m"
+    | "5m"
+    | "15m"
+    | "30m"
+    | "60m"
+    | "90m"
+    | "1h"
+    | "1d"
+    | "5d"
+    | "1wk"
+    | "1mo"
+    | "3mo";
+  let inter: ValidInterval = "1d";
+const marketOpen = isNSEOpen();
+  let period 
+if (!marketOpen) {
+  const now = new Date();
+  const istTime = new Date(
+    now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
+  );
+
+  period = new Date(istTime);
+
+  const hours = istTime.getHours();
+  const minutes = istTime.getMinutes();
+  const currentMinutes = hours * 60 + minutes;
+  const marketOpenTime = 9 * 60 + 15;
+
+  if (currentMinutes < marketOpenTime) {
+    period.setDate(period.getDate() - 1);
+  }
+
+  period.setHours(15, 30, 0, 0);
+
+  while (period.getDay() === 6 || period.getDay() === 0) {
+    period.setDate(period.getDate() - 1);
+  }
+}
+  switch (interval) {
+    case "1D":
+      period = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
+      inter = "30m";
+      break;
+    case "1W":
+      period = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      inter = "90m";
+      break;
+    case "1M":
+      period = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      inter = "1d";
+      break;
+    case "3M":
+      period = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+      inter = "1wk";
+      break;
+    case "1Y":
+      period = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
+      inter = "1mo";
+      break;
+  }
+  let result: any = {};
+  const syb = symbol + ".NS";
+  try {
+    result = await yahooFinance.chart(syb, {
+      period1: period,
+      interval: inter,
+    });
+  } catch (error) {
+    if (error.message.includes("No data found")) {
+      throw new ApiError(404,"Symbol is invalid or delisted")
+    } else {
+      console.log(error);
+    }
+  }
+  if (!result) {
+    throw new ApiError(404, "No stock data found");
+  }
+  const data = [];
+  for (let i = 0; i < result.quotes.length; i++) {
+    const element = result.quotes[i];
+    data.push({
+      value: element.open,
+      time: Math.floor(new Date(element.date).getTime() / 1000),
+    });
+  }
+  return res.status(200).json({
+    chart: result,
+    data: data,
+  });
+};
+const Polldata = async (order: StockOrder) => {
+  try {
+    const symbol = order.symbol;
+    const quote = await yahooFinance.quote(`${symbol}.NS`);
+    if (!quote) {
+      throw new ApiError(400, "Quote fetch failed");
+    }
+    const price = quote.regularMarketPrice;
+    const user = await db
+      .select()
+      .from(Users)
+      .where(eq(Users.id, order.user_id));
+    if (user.length === 0) {
+      throw new ApiError(404, "User not found");
+    }
+
+    if (price >= Number(order.price) && order.order_type === "Sell") {
+      const req = {
+        body: {
+          stock_name: symbol,
+          quantity: order.quantity,
+          curr_price: order.price,
+        },
+        user: {
+          id: user[0].id,
+          email: user[0].email,
+          name: user[0].name,
+          balance: user[0].balance,
+        },
+      };
+      const res: any = {
+        status: (code: number) => ({
+          json: (data: any) => console.log(`Response: ${code}`, data),
+        }),
+      };
+      const next = (error?: any) => {
+        if (error) {
+          console.error("Error:", error);
+        }
+      };
+      const resp = SellNormal(req, res, next);
+      await db
+        .update(Orders)
+        .set({
+          status: "Completed",
+        })
+        .where(eq(Orders.id, order.id));
+      return "COMPLETED";
+    } else if (price <= Number(order.price) && order.order_type === "Buy") {
+      const req = {
+        body: {
+          stock_name: symbol,
+          quantity: order.quantity,
+          curr_price: order.price,
+        },
+        user: {
+          id: user[0].id,
+          email: user[0].email,
+          name: user[0].name,
+          balance: user[0].balance,
+        },
+      };
+      const res: any = {
+        status: (code: number) => ({
+          json: (data: any) => console.log(`Response: ${code}`, data),
+        }),
+      };
+      const next = (error?: any) => {
+        if (error) {
+          console.error("Error:", error);
+        }
+      };
+      const resp = BuyNormal(req, res, next);
+      await db
+        .update(Orders)
+        .set({
+          status: "Completed",
+        })
+        .where(eq(Orders.id, order.id));
+      return "COMPLETED";
+    }
+    const diff = ((price - Number(order.price)) / Number(order.price)) * 100;
+    return Math.abs(diff);
+  } catch (error) {
+    console.error(`Error polling order ${order.id}:`, error);
+    return 999;
+  }
+};
+const GetOrders = asynchandler(async () => {
+  const pendingOrders = await db
+    .select()
+    .from(Orders)
+    .where(eq(Orders.status, "PENDING"));
+  return pendingOrders;
+});
+
+export { searchdata, GetOrders, Polldata, stockData };
