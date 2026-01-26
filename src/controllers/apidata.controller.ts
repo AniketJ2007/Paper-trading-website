@@ -259,5 +259,24 @@ const GetOrders = asynchandler(async () => {
     .where(eq(Orders.status, "PENDING"));
   return pendingOrders;
 });
-
-export { searchdata, GetOrders, Polldata, stockData };
+const getFrontData = async (req:Request, res:Response) => {  
+  try {
+    const response = await fetch('http://127.0.0.1:5000/api/gainers');
+    const gainer = await response.json();  
+    const response1=await fetch('http:127.0.0.1:5000/api/losers')
+    const loser=await response1.json()
+    const response2=await fetch('http:127.0.0.1:5000/api/index')
+    const indices=await response2.json()
+    const response3=await fetch('http:127.0.0.1:5000/api/indices')
+    const graphs=await response3.json()
+    return res.status(200).json({gainer,loser,indices,graphs});  
+  } catch (error) {
+    console.log(error);
+    return res.status(400).json({  
+      success: false,
+      message: "Failed to fetch",
+      error: error.message
+    });
+  }
+};
+export { searchdata, GetOrders, Polldata, stockData ,getFrontData};
