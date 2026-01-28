@@ -18,7 +18,8 @@ const app=e()
 const corsOptions = {
   origin: 'http://localhost:5173',
   optionsSuccessStatus: 200,
-  methods:['GET','POST','UPDATE','DELETE']
+  methods:['GET','POST','UPDATE','DELETE'],
+  credentials: true
 }
 app.use(cors(corsOptions))
 app.use(cookieparser())
