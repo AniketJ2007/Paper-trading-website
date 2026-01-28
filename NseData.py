@@ -21,8 +21,8 @@ def get_quote():
 @app.route('/api/indices')
 def get_index():
     try:
-        d1 = yf.download("^NSEI", period='2d', interval='15m', progress=False)
-        d2 = yf.download("^BSESN", period='2d', interval='15m', progress=False)
+        d1 = yf.download("^NSEI", period='2d', interval='5m', progress=False)
+        d2 = yf.download("^BSESN", period='2d', interval='5m', progress=False)
         def clean_df(df):
             if isinstance(df.columns, pd.MultiIndex):
                 df.columns = ['_'.join(col).strip() if isinstance(col, tuple) else col 

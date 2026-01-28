@@ -10,11 +10,15 @@ import { refreshToken } from "../utils/Tokens";
 const RegisterUser = asynchandler(async (req: Request, res: Response) => {
   const { name, email, password } = req.body;
   if (!name || !email || !password) {
-    throw new ApiError(400, "All fields required");
+    return res.status(400).json({
+      message: "All fields required",
+    });
   }
   const result = await db.select().from(Users).where(eq(Users.email, email));
   if (result.length > 0) {
-    throw new ApiError(400, "User with this email already exists");
+    return res.status(400).json({
+      message: "User already exists",
+    });
   }
   const newPass = await bcrypt.hash(password, 10);
   const insertuser = await db.insert(Users).values({
@@ -31,15 +35,21 @@ const RegisterUser = asynchandler(async (req: Request, res: Response) => {
 const LoginUser = asynchandler(async (req: Request, res: Response) => {
   const { email, password } = req.body;
   if (!email || !password) {
-    throw new ApiError(400, "All fields required");
+    return res.status(400).json({
+      message: "All fields required",
+    });
   }
   const result = await db.select().from(Users).where(eq(Users.email, email));
   if (result.length == 0) {
-    throw new ApiError(400, "User with this email doesn't exist");
+    return res.status(400).json({
+      message: "User with this email doesnt exist",
+    });
   }
   const passcheck = await bcrypt.compare(password, result[0].password);
   if (!passcheck) {
-    throw new ApiError(400, "Password is wrong");
+    return res.status(400).json({
+      message: "Password is Wrong",
+    });
   }
   const token = refreshToken(result[0].id);
   const options = {

@@ -28,7 +28,7 @@ const searchdata = asynchandler(async (req: ApiRequest, res: Response) => {
     quotesCount: 10,
   });
   const equities = r1.quotes.filter(
-    (q) => "quoteType" in q && q.quoteType === "EQUITY",
+    (q) => "quoteType" in q && q.quoteType === "EQUITY" && (q.exchange==='NSI' || q.exchange==='BSE'),
   );
   return res.status(200).json({
     data: equities,
@@ -115,11 +115,11 @@ if (!marketOpen) {
   switch (interval) {
     case "1D":
       period = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
-      inter = "30m";
+      inter = "5m";
       break;
     case "1W":
       period = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-      inter = "90m";
+      inter = "60m";
       break;
     case "1M":
       period = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
@@ -127,11 +127,11 @@ if (!marketOpen) {
       break;
     case "3M":
       period = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
-      inter = "1wk";
+      inter = "5d";
       break;
     case "1Y":
       period = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
-      inter = "1mo";
+      inter = "1wk";
       break;
   }
   let result: any = {};
@@ -154,10 +154,12 @@ if (!marketOpen) {
   const data = [];
   for (let i = 0; i < result.quotes.length; i++) {
     const element = result.quotes[i];
+    if(element.open!==null && element.date!==null){
     data.push({
       value: element.open,
       time: Math.floor(new Date(element.date).getTime() / 1000),
     });
+  }
   }
   return res.status(200).json({
     chart: result,
