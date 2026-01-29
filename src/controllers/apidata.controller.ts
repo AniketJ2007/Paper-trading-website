@@ -25,7 +25,7 @@ const searchdata = asynchandler(async (req: ApiRequest, res: Response) => {
     region: "IN",
     enableFuzzyQuery: true,
     newsCount: 0,
-    quotesCount: 10,
+    quotesCount: 25,
   });
   const equities = r1.quotes.filter(
     (q) => "quoteType" in q && q.quoteType === "EQUITY" && (q.exchange==='NSI' || q.exchange==='BSE'),
@@ -46,7 +46,7 @@ interface StockOrder {
   created_at?: Date;
   filled_at?: Date;
 }
-// 1. Fix isNSEOpen to return false on weekends
+
 const isNSEOpen = () => {
   const now = new Date();
   const istTime = new Date(
@@ -65,10 +65,6 @@ const isNSEOpen = () => {
 
   return currentMinutes >= marketOpen && currentMinutes <= marketClose;
 };
-
-
-
-// Result: 'period' now holds the most recent valid market closing timestamp.
 
 const stockData = async (req: Request, res: Response) => {
   const { symbol, interval } = req.body;
