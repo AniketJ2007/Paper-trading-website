@@ -1,5 +1,4 @@
 import { integer, pgTable, varchar,numeric, timestamp, text } from "drizzle-orm/pg-core";
-import {InferSelectModel,InferInsertModel} from "drizzle-orm"
 
 export const Users = pgTable("users", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -20,7 +19,7 @@ export const Watchlists = pgTable('watchlists', {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   user_id: integer().references(() => Users.id).notNull(),
   symbol: varchar({ length: 10 }).notNull(), 
-  notes: text(), // optional user notes
+  notes: text(), 
   added_at: timestamp().notNull().defaultNow(),
 });
 
