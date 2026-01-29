@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify,request
 from nsetools import Nse
 from flask_cors import CORS
 import yfinance as yf
@@ -42,6 +42,34 @@ def get_index():
         return jsonify({
             'nifty': d1.to_dict(orient='records'),
             'sensex': d2.to_dict(orient='records')
+        })
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+@app.route('/api/indexgraph',methods=['POST'])
+def get_indice():
+    try:
+        data = request.get_json()
+        name = data.get('name')
+        d1 = yf.download(name, period='2d', interval='5m', progress=False)
+        
+        def clean_df(df):
+            if isinstance(df.columns, pd.MultiIndex):
+                df.columns = ['_'.join(col).strip() if isinstance(col, tuple) else col 
+                              for col in df.columns.values]
+
+            df = df.reset_index()
+  
+            for col in df.columns:
+                if pd.api.types.is_datetime64_any_dtype(df[col]):
+                    df[col] = df[col].astype(str)
+            
+            return df
+        
+        d1 = clean_df(d1)
+        
+        return jsonify({
+            'data': d1.to_dict(orient='records')
         })
     
     except Exception as e:
