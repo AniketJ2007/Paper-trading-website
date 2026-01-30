@@ -35,6 +35,35 @@ const searchdata = asynchandler(async (req: ApiRequest, res: Response) => {
     message: "Data fetched",
   });
 });
+const quotedata = asynchandler(async (req: ApiRequest, res: Response) => {
+
+        const { symbols } = req.query; 
+
+        if (!symbols || typeof symbols !== 'string') {
+             return res.status(400).json({ error: "Symbols are required" });
+        }
+        const symbolList = symbols
+            .split(',')
+            .map(s => s.trim())
+            .filter(s => s.length > 0);
+
+        if (symbolList.length === 0) {
+            console.log("Error: Symbol list is empty after cleaning");
+            return res.status(400).json({ error: "No valid symbols provided" });
+        }
+        const quotes = await yahooFinance.quote(symbolList);
+        const responseData: Record<string, any> = {};
+        
+        quotes.forEach((q) => {
+            responseData[q.symbol] = {
+                price: q.regularMarketPrice,
+                currency: q.currency,
+                shortName: q.shortName
+            };
+        });
+
+        res.json(responseData);
+});
 interface StockOrder {
   id: number;
   user_id: number;
@@ -277,4 +306,4 @@ const getFrontData = async (req:Request, res:Response) => {
     });
   }
 };
-export { searchdata, GetOrders, Polldata, stockData ,getFrontData};
+export { searchdata, GetOrders, Polldata, stockData ,getFrontData,quotedata};

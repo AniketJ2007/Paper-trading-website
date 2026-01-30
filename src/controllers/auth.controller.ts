@@ -7,6 +7,14 @@ import { eq } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import { Request, Response } from "express";
 import { refreshToken } from "../utils/Tokens";
+interface ApiRequest extends Request {
+  user?: {
+    id: number;
+    email: string;
+    name: string;
+    balance: string;
+  };
+}
 const RegisterUser = asynchandler(async (req: Request, res: Response) => {
   const { name, email, password } = req.body;
   if (!name || !email || !password) {
@@ -63,5 +71,11 @@ const LoginUser = asynchandler(async (req: Request, res: Response) => {
     message: "Login Successful",
   });
 });
-
-export { RegisterUser, LoginUser };
+const getUser = (async(req:ApiRequest,res:Response)=>{
+ const user=req.user
+ return res.status(200).json({
+  user,
+  message:"User sent"
+ })
+})
+export { RegisterUser, LoginUser,getUser };
