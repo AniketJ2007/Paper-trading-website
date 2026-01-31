@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { verifyJwt } from "../middlewares/auth.middleware";
-import { addOption, addToWatchList, BuyNormal, deleteFromWatchList, getHoldings, getTransactions, getWatchlists, SellNormal, updateWatchList } from "../controllers/stock.controller";
-import { getFrontData, quotedata, searchdata, stockData } from "../controllers/apidata.controller";
+import { verifyJwt } from "../middlewares/auth.middleware.js";
+import { addOption, addToWatchList, BuyNormal, deleteFromWatchList, getHoldings, getTransactions, getWatchlists, SellNormal, updateWatchList } from "../controllers/stock.controller.js";
+import { getFrontData, quotedata, searchdata, stockData } from "../controllers/apidata.controller.js";
 const router=Router()
 router.route('/stockdata').post(stockData)
 router.route('/search').post(searchdata)

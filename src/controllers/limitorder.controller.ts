@@ -1,6 +1,6 @@
-import { Polldata } from "./apidata.controller";
-import { Orders } from "../db/schema";
-import { db } from "..";
+import { Polldata } from "./apidata.controller.js";
+import { Orders } from "../db/schema.js";
+import { db } from "../index.js";
 import { eq } from "drizzle-orm";
 function checkTime() {
   const now = new Date();

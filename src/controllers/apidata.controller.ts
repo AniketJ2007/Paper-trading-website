@@ -1,11 +1,11 @@
 import YahooFinance from "yahoo-finance2";
-import asynchandler from "../utils/asynchandler";
+import asynchandler from "../utils/asynchandler.js";
 import { Request, Response } from "express";
-import { ApiError } from "../utils/ApiError";
-import { db } from "..";
-import { Orders, Users } from "../db/schema";
+import { ApiError } from "../utils/ApiError.js";
+import { db } from "../index.js";
+import { Orders, Users } from "../db/schema.js";
 import { eq } from "drizzle-orm";
-import { BuyNormal, SellNormal } from "./stock.controller";
+import { BuyNormal, SellNormal } from "./stock.controller.js";
 
 const yahooFinance = new YahooFinance({ suppressNotices: ["yahooSurvey"] });
 interface ApiRequest extends Request {

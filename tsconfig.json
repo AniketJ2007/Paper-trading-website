@@ -4,9 +4,11 @@
 
 		// Treat files as modules even if it doesn't use import/export
 		"moduleDetection": "force",
-
+		"outDir": "./dist",
+    	"rootDir": "./src",
 		// Ignore module structure
-		"module": "preserve",
+		"module": "esnext",
+		"moduleResolution": "node",
 
 		// Allow JSON modules to be imported
 		"resolveJsonModule": true,
@@ -20,4 +22,6 @@
 		// Disallow features that require cross-file awareness
 		"isolatedModules": true,
 	},
+	"include": ["src/**/*"],
+	"exclude": ["node_modules", "dist", "drizzle.config.ts"]
 }

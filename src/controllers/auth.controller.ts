@@ -1,10 +1,10 @@
-import asynchandler from "../utils/asynchandler";
-import { Users } from "../db/schema";
-import { db } from "..";
+import asynchandler from "../utils/asynchandler.js";
+import { Users } from "../db/schema.js";
+import { db } from "../index.js";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import { Request, Response } from "express";
-import { refreshToken } from "../utils/Tokens";
+import { refreshToken } from "../utils/Tokens.js";
 interface ApiRequest extends Request {
   user?: {
     id: number;

@@ -4,11 +4,11 @@ import {
   Transactions,
   Users,
   Watchlists,
-} from "../db/schema";
+} from "../db/schema.js";
 import { Request, Response } from "express";
-import asynchandler from "../utils/asynchandler";
-import { ApiError } from "../utils/ApiError";
-import { db } from "..";
+import asynchandler from "../utils/asynchandler.js";
+import { ApiError } from "../utils/ApiError.js";
+import { db } from "../index.js";
 import { and, eq, sql } from "drizzle-orm";
 interface ApiRequest extends Request {
   user?: {

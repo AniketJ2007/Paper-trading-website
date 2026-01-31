@@ -1,11 +1,11 @@
 import e, { json,urlencoded } from 'express'
-import userrouter from "../src/routes/auth.routes"
-import stockrouter from "../src/routes/stock.routes"
+import userrouter from "./routes/auth.routes.js"
+import stockrouter from "./routes/stock.routes.js"
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
 import dotenv from 'dotenv'
 import cookieparser from 'cookie-parser'
-import { startPolling } from './controllers/limitorder.controller';
+import { startPolling } from './controllers/limitorder.controller.js';
 import cors from 'cors'
 
 dotenv.config({
