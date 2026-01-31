@@ -1,5 +1,3 @@
-import { ApiError } from "../utils/ApiError";
-import { ApiResponse } from "../utils/ApiResponse";
 import asynchandler from "../utils/asynchandler";
 import { Users } from "../db/schema";
 import { db } from "..";
@@ -78,4 +76,13 @@ const getUser = (async(req:ApiRequest,res:Response)=>{
   message:"User sent"
  })
 })
-export { RegisterUser, LoginUser,getUser };
+const logoutUser=asynchandler(async (req:ApiRequest,res:Response)=>{
+  res.cookie('Token', '', {
+    httpOnly: true,
+    expires: new Date(0), 
+    secure: true, 
+    sameSite: 'strict'
+  });
+  res.status(200).json({ message: 'Logged out successfully' });
+})
+export { RegisterUser, LoginUser,getUser,logoutUser };
