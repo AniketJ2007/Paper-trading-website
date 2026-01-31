@@ -158,22 +158,22 @@ const getTransactions = asynchandler(async (req: ApiRequest, res: Response) => {
     message: "Fetched transactions succesfully",
   });
 });
-const getWatchlists = asynchandler(async (req: ApiRequest, res: Response) => {
-  const user = req.user;
-  const result = await db
-    .select()
-    .from(Watchlists)
-    .where(eq(Watchlists.user_id, user.id));
-  if (!result || result.length === 0) {
-    return res.status(400).json({
-      message: "No watchlists exist",
+  const getWatchlists = asynchandler(async (req: ApiRequest, res: Response) => {
+    const user = req.user;
+    const result = await db
+      .select()
+      .from(Watchlists)
+      .where(eq(Watchlists.user_id, user.id));
+    if (!result) {
+      return res.status(400).json({
+        message: "No watchlists exist",
+      });
+    }
+    return res.status(200).json({
+      watchlists: result,
+      message: "Fetched watchlists succesfully",
     });
-  }
-  return res.status(200).json({
-    watchlists: result,
-    message: "Fetched watchlists succesfully",
   });
-});
 
 const addToWatchList = asynchandler(async (req: ApiRequest, res: Response) => {
   const user = req.user;
@@ -187,11 +187,11 @@ const addToWatchList = asynchandler(async (req: ApiRequest, res: Response) => {
     .select()
     .from(Watchlists)
     .where(and(eq(Watchlists.user_id, user.id), eq(Watchlists.symbol, symbol)));
-    if((await query).length===0){
-      return res.status(400).json({
-        message:"Symbol is already in watchlist please modify that"
-      })
-    }
+  if ((await query).length > 0) {
+    return res.status(400).json({
+      message: "Symbol is already in watchlist please modify that",
+    });
+  }
   notes = notes ? notes : "No Comment";
   const result = await db.insert(Watchlists).values({
     user_id: user.id,
@@ -232,34 +232,30 @@ const deleteFromWatchList = asynchandler(
     });
   },
 );
-const updateWatchList = asynchandler(
-  async (req: ApiRequest, res: Response) => {
-    const user = req.user;
-    let { symbol,notes } = req.body;
-    if (!symbol) {
-      return res.status(400).json({
-        message: "Symbol is required",
-      });
-    }
-
-    const result = await db
-      .update(Watchlists)
-      .set({
-        notes:notes
-      })
-      .where(
-        and(eq(Watchlists.user_id, user.id), eq(Watchlists.symbol, symbol)),
-      );
-    if (!result) {
-      return res.status(400).json({
-        message: "Error updating watchlist",
-      });
-    }
-    return res.status(200).json({
-      message: "Updated watchlist",
+const updateWatchList = asynchandler(async (req: ApiRequest, res: Response) => {
+  const user = req.user;
+  let { symbol, notes } = req.body;
+  if (!symbol) {
+    return res.status(400).json({
+      message: "Symbol is required",
     });
-  },
-);
+  }
+
+  const result = await db
+    .update(Watchlists)
+    .set({
+      notes: notes,
+    })
+    .where(and(eq(Watchlists.user_id, user.id), eq(Watchlists.symbol, symbol)));
+  if (result.rowCount === 0) {
+    return res.status(404).json({
+      message: "Watchlist item not found or no changes made",
+    });
+  }
+  return res.status(200).json({
+    message: "Updated watchlist",
+  });
+});
 export {
   BuyNormal,
   SellNormal,
@@ -269,5 +265,5 @@ export {
   getWatchlists,
   addToWatchList,
   deleteFromWatchList,
-  updateWatchList
+  updateWatchList,
 };
