@@ -51,6 +51,7 @@ const LoginUser = asynchandler(async (req, res) => {
     const options = {
         httpOnly: true,
         secure: true,
+        maxAge: 24 * 60 * 60 * 1000
     };
     res.cookie("Token", token, options);
     return res.status(200).json({
@@ -69,7 +70,7 @@ const logoutUser = asynchandler(async (req, res) => {
         httpOnly: true,
         expires: new Date(0),
         secure: true,
-        sameSite: 'strict'
+        sameSite: 'none'
     });
     res.status(200).json({ message: 'Logged out successfully' });
 });

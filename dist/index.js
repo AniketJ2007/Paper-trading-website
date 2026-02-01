@@ -14,7 +14,9 @@ const sql = neon(process.env.DATABASE_URL);
 const db = drizzle(sql);
 const app = e();
 const corsOptions = {
-    origin: 'http://localhost:5173',
+    origin: ['https://papertradingfrontend.vercel.app',
+        'https://papertradingfrontend-git-main-aniket-joshis-projects-d0d3db4d.vercel.app',
+        'http://localhost:5173'],
     optionsSuccessStatus: 200,
     methods: ['GET', 'POST', 'UPDATE', 'DELETE'],
     credentials: true
