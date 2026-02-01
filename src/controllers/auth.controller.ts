@@ -58,13 +58,12 @@ const LoginUser = asynchandler(async (req: Request, res: Response) => {
     });
   }
   const token = refreshToken(result[0].id);
-  const options = {
+  res.cookie("Token", token, {
     httpOnly: true,
     secure: true,
-    maxAge: 24 * 60 * 60 * 1000
-  };
-
-  res.cookie("Token", token, options);
+    sameSite:'none',
+    maxAge:24*60*60*1000
+  });
 
   return res.status(200).json({
     message: "Login Successful",
