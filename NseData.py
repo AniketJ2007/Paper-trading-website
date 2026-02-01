@@ -3,6 +3,7 @@ from nsetools import Nse
 from flask_cors import CORS
 import yfinance as yf
 import pandas as pd
+import os
 app = Flask(__name__)
 CORS(app)
 nse = Nse()
@@ -75,4 +76,5 @@ def get_indice():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 if __name__ == '__main__':
-    app.run(port=5000)
+    port = int(os.environ.get('PORT', 10000))
+    app.run(host='0.0.0.0',port=port)
