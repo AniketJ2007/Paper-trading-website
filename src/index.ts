@@ -16,7 +16,8 @@ const db = drizzle(sql);
 const app=e()
 
 const corsOptions = {
-  origin: ['https://papertradingfrontend.vercel.app/','https://papertradingfrontend-git-main-aniket-joshis-projects-d0d3db4d.vercel.app/'],
+  origin: ['https://papertradingfrontend.vercel.app',
+    'https://papertradingfrontend-git-main-aniket-joshis-projects-d0d3db4d.vercel.app'],
   optionsSuccessStatus: 200,
   methods:['GET','POST','UPDATE','DELETE'],
   credentials: true
