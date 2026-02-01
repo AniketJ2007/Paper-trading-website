@@ -28,7 +28,10 @@ const searchdata = asynchandler(async (req: ApiRequest, res: Response) => {
     quotesCount: 25,
   });
   const equities = r1.quotes.filter(
-    (q) => "quoteType" in q && q.quoteType === "EQUITY" && (q.exchange==='NSI' || q.exchange==='BSE'),
+    (q) =>
+      "quoteType" in q &&
+      q.quoteType === "EQUITY" &&
+      (q.exchange === "NSI" || q.exchange === "BSE"),
   );
   return res.status(200).json({
     data: equities,
@@ -36,33 +39,32 @@ const searchdata = asynchandler(async (req: ApiRequest, res: Response) => {
   });
 });
 const quotedata = asynchandler(async (req: ApiRequest, res: Response) => {
+  const { symbols } = req.query;
 
-        const { symbols } = req.query; 
+  if (!symbols || typeof symbols !== "string") {
+    return res.status(400).json({ error: "Symbols are required" });
+  }
+  const symbolList = symbols
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
 
-        if (!symbols || typeof symbols !== 'string') {
-             return res.status(400).json({ error: "Symbols are required" });
-        }
-        const symbolList = symbols
-            .split(',')
-            .map(s => s.trim())
-            .filter(s => s.length > 0);
+  if (symbolList.length === 0) {
+    console.log("Error: Symbol list is empty after cleaning");
+    return res.status(400).json({ error: "No valid symbols provided" });
+  }
+  const quotes = await yahooFinance.quote(symbolList);
+  const responseData: Record<string, any> = {};
 
-        if (symbolList.length === 0) {
-            console.log("Error: Symbol list is empty after cleaning");
-            return res.status(400).json({ error: "No valid symbols provided" });
-        }
-        const quotes = await yahooFinance.quote(symbolList);
-        const responseData: Record<string, any> = {};
-        
-        quotes.forEach((q) => {
-            responseData[q.symbol] = {
-                price: q.regularMarketPrice,
-                currency: q.currency,
-                shortName: q.shortName
-            };
-        });
+  quotes.forEach((q) => {
+    responseData[q.symbol] = {
+      price: q.regularMarketPrice,
+      currency: q.currency,
+      shortName: q.shortName,
+    };
+  });
 
-        res.json(responseData);
+  res.json(responseData);
 });
 interface StockOrder {
   id: number;
@@ -79,16 +81,16 @@ interface StockOrder {
 const isNSEOpen = () => {
   const now = new Date();
   const istTime = new Date(
-    now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
+    now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }),
   );
-  
+
   const day = istTime.getDay();
   if (day === 6 || day === 0) return false;
 
   const hours = istTime.getHours();
   const minutes = istTime.getMinutes();
   const currentMinutes = hours * 60 + minutes;
-  
+
   const marketOpen = 9 * 60 + 15;
   const marketClose = 15 * 60 + 30;
 
@@ -112,31 +114,31 @@ const stockData = async (req: Request, res: Response) => {
     | "1mo"
     | "3mo";
   let inter: ValidInterval = "1d";
-const marketOpen = isNSEOpen();
-  let period 
-if (!marketOpen) {
-  const now = new Date();
-  const istTime = new Date(
-    now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
-  );
+  const marketOpen = isNSEOpen();
+  let period;
+  if (!marketOpen) {
+    const now = new Date();
+    const istTime = new Date(
+      now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }),
+    );
 
-  period = new Date(istTime);
+    period = new Date(istTime);
 
-  const hours = istTime.getHours();
-  const minutes = istTime.getMinutes();
-  const currentMinutes = hours * 60 + minutes;
-  const marketOpenTime = 9 * 60 + 15;
+    const hours = istTime.getHours();
+    const minutes = istTime.getMinutes();
+    const currentMinutes = hours * 60 + minutes;
+    const marketOpenTime = 9 * 60 + 15;
 
-  if (currentMinutes < marketOpenTime) {
-    period.setDate(period.getDate() - 1);
+    if (currentMinutes < marketOpenTime) {
+      period.setDate(period.getDate() - 1);
+    }
+
+    period.setHours(15, 30, 0, 0);
+
+    while (period.getDay() === 6 || period.getDay() === 0) {
+      period.setDate(period.getDate() - 1);
+    }
   }
-
-  period.setHours(15, 30, 0, 0);
-
-  while (period.getDay() === 6 || period.getDay() === 0) {
-    period.setDate(period.getDate() - 1);
-  }
-}
   switch (interval) {
     case "1D":
       period = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
@@ -168,7 +170,7 @@ if (!marketOpen) {
     });
   } catch (error) {
     if (error.message.includes("No data found")) {
-      throw new ApiError(404,"Symbol is invalid or delisted")
+      throw new ApiError(404, "Symbol is invalid or delisted");
     } else {
       console.log(error);
     }
@@ -179,12 +181,12 @@ if (!marketOpen) {
   const data = [];
   for (let i = 0; i < result.quotes.length; i++) {
     const element = result.quotes[i];
-    if(element.open!==null && element.date!==null){
-    data.push({
-      value: element.open,
-      time: Math.floor(new Date(element.date).getTime() / 1000),
-    });
-  }
+    if (element.open !== null && element.date !== null) {
+      data.push({
+        value: element.open,
+        time: Math.floor(new Date(element.date).getTime() / 1000),
+      });
+    }
   }
   return res.status(200).json({
     chart: result,
@@ -286,24 +288,24 @@ const GetOrders = asynchandler(async () => {
     .where(eq(Orders.status, "PENDING"));
   return pendingOrders;
 });
-const getFrontData = async (req:Request, res:Response) => {  
+const getFrontData = async (req: Request, res: Response) => {
   try {
-    const response = await fetch('http://127.0.0.1:5000/api/gainers');
-    const gainer = await response.json();  
-    const response1=await fetch('http:127.0.0.1:5000/api/losers')
-    const loser=await response1.json()
-    const response2=await fetch('http:127.0.0.1:5000/api/index')
-    const indices=await response2.json()
-    const response3=await fetch('http:127.0.0.1:5000/api/indices')
-    const graphs=await response3.json()
-    return res.status(200).json({gainer,loser,indices,graphs});  
+    const response = await fetch(`${process.env.PYTHON_URL}/api/gainers`);
+    const gainer = await response.json();
+    const response1 = await fetch(`${process.env.PYTHON_URL}/api/losers`);
+    const loser = await response1.json();
+    const response2 = await fetch(`${process.env.PYTHON_URL}/api/index`);
+    const indices = await response2.json();
+    const response3 = await fetch(`${process.env.PYTHON_URL}/api/indices`);
+    const graphs = await response3.json();
+    return res.status(200).json({ gainer, loser, indices, graphs });
   } catch (error) {
     console.log(error);
-    return res.status(400).json({  
+    return res.status(400).json({
       success: false,
       message: "Failed to fetch",
-      error: error.message
+      error: error.message,
     });
   }
 };
-export { searchdata, GetOrders, Polldata, stockData ,getFrontData,quotedata};
+export { searchdata, GetOrders, Polldata, stockData, getFrontData, quotedata };

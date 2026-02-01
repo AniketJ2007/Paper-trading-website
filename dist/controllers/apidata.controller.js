@@ -17,7 +17,9 @@ const searchdata = asynchandler(async (req, res) => {
         newsCount: 0,
         quotesCount: 25,
     });
-    const equities = r1.quotes.filter((q) => "quoteType" in q && q.quoteType === "EQUITY" && (q.exchange === 'NSI' || q.exchange === 'BSE'));
+    const equities = r1.quotes.filter((q) => "quoteType" in q &&
+        q.quoteType === "EQUITY" &&
+        (q.exchange === "NSI" || q.exchange === "BSE"));
     return res.status(200).json({
         data: equities,
         message: "Data fetched",
@@ -25,13 +27,13 @@ const searchdata = asynchandler(async (req, res) => {
 });
 const quotedata = asynchandler(async (req, res) => {
     const { symbols } = req.query;
-    if (!symbols || typeof symbols !== 'string') {
+    if (!symbols || typeof symbols !== "string") {
         return res.status(400).json({ error: "Symbols are required" });
     }
     const symbolList = symbols
-        .split(',')
-        .map(s => s.trim())
-        .filter(s => s.length > 0);
+        .split(",")
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0);
     if (symbolList.length === 0) {
         console.log("Error: Symbol list is empty after cleaning");
         return res.status(400).json({ error: "No valid symbols provided" });
@@ -42,7 +44,7 @@ const quotedata = asynchandler(async (req, res) => {
         responseData[q.symbol] = {
             price: q.regularMarketPrice,
             currency: q.currency,
-            shortName: q.shortName
+            shortName: q.shortName,
         };
     });
     res.json(responseData);
@@ -235,13 +237,13 @@ const GetOrders = asynchandler(async () => {
 });
 const getFrontData = async (req, res) => {
     try {
-        const response = await fetch('http://127.0.0.1:5000/api/gainers');
+        const response = await fetch(`${process.env.PYTHON_URL}/api/gainers`);
         const gainer = await response.json();
-        const response1 = await fetch('http:127.0.0.1:5000/api/losers');
+        const response1 = await fetch(`${process.env.PYTHON_URL}/api/losers`);
         const loser = await response1.json();
-        const response2 = await fetch('http:127.0.0.1:5000/api/index');
+        const response2 = await fetch(`${process.env.PYTHON_URL}/api/index`);
         const indices = await response2.json();
-        const response3 = await fetch('http:127.0.0.1:5000/api/indices');
+        const response3 = await fetch(`${process.env.PYTHON_URL}/api/indices`);
         const graphs = await response3.json();
         return res.status(200).json({ gainer, loser, indices, graphs });
     }
@@ -250,7 +252,7 @@ const getFrontData = async (req, res) => {
         return res.status(400).json({
             success: false,
             message: "Failed to fetch",
-            error: error.message
+            error: error.message,
         });
     }
 };
