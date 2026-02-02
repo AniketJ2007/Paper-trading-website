@@ -162,17 +162,26 @@ const stockData = async (req: Request, res: Response) => {
       break;
   }
   let result: any = {};
-  const syb = symbol + ".NS";
+  let syb = symbol + ".NS";
   try {
     result = await yahooFinance.chart(syb, {
       period1: period,
       interval: inter,
     });
   } catch (error) {
-    if (error.message.includes("No data found")) {
-      throw new ApiError(404, "Symbol is invalid or delisted");
-    } else {
-      console.log(error);
+    console.log("Trying BSE");
+    try {
+      syb = symbol + ".BO";
+      result = await yahooFinance.chart(syb, {
+        period1: period,
+        interval: inter,
+      });
+    } catch (error) {
+      if (error.message.includes("No data found")) {
+        throw new ApiError(404, "Symbol is invalid or delisted");
+      } else {
+        console.log(error);
+      }
     }
   }
   if (!result) {

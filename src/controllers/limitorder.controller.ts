@@ -48,7 +48,7 @@ async function initQueues() {
 }
 function startPolling(){
   initQueues()
-setInterval(async () => {
+  setInterval(async () => {
   if (!checkTime()) return;
   console.log('Polled 60 secs');
   for (const [id, order] of sixty_secs) {
