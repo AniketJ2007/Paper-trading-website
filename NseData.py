@@ -11,6 +11,9 @@ nse = Nse()
 @app.route('/api/gainers')
 def get_gainers():
     return jsonify(nse.get_top_gainers())
+@app.route('/')
+def health():
+    return "Server running"
 
 @app.route('/api/losers')
 def get_losers():
