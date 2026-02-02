@@ -29,6 +29,9 @@ app.use(json())
 app.use(urlencoded({ extended: true }));
 app.use('/api/v1/auth',userrouter)
 app.use('/api/v1/stock',stockrouter)
+app.get('/', (req, res) => {
+  res.send('I am alive'); 
+});
 const PORT=process.env.PORT || 3000
 app.listen(PORT, () => {
     console.log(`Server is running port ${3000}`);

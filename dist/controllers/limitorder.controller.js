@@ -2,14 +2,19 @@ import { Polldata } from "./apidata.controller.js";
 import { Orders } from "../db/schema.js";
 import { db } from "../index.js";
 import { eq } from "drizzle-orm";
-function checkTime() {
+const checkTime = () => {
     const now = new Date();
-    const hours = now.getHours();
-    const minutes = now.getMinutes();
-    const after915 = hours > 9 || (hours === 9 && minutes >= 15);
-    const before330 = hours < 15 || (hours === 15 && minutes <= 30);
-    return after915 && before330;
-}
+    const istTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+    const day = istTime.getDay();
+    if (day === 6 || day === 0)
+        return false;
+    const hours = istTime.getHours();
+    const minutes = istTime.getMinutes();
+    const currentMinutes = hours * 60 + minutes;
+    const marketOpen = 9 * 60 + 15;
+    const marketClose = 15 * 60 + 30;
+    return currentMinutes >= marketOpen && currentMinutes <= marketClose;
+};
 const five_mins = new Map();
 const two_mins = new Map();
 const sixty_secs = new Map();
