@@ -2,7 +2,7 @@ import YahooFinance from "yahoo-finance2";
 import asynchandler from "../utils/asynchandler.js";
 import { Request, Response } from "express";
 import { ApiError } from "../utils/ApiError.js";
-import { db } from "../index.js";
+import { db } from "../db/index.js";
 import { Orders, Users } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 import { BuyNormal, SellNormal } from "./stock.controller.js";
@@ -205,9 +205,13 @@ const stockData = async (req: Request, res: Response) => {
 const Polldata = async (order: StockOrder) => {
   try {
     const symbol = order.symbol;
-    const quote = await yahooFinance.quote(`${symbol}.NS`);
+    let quote = await yahooFinance.quote(`${symbol}.NS`);
     if (!quote) {
-      throw new ApiError(400, "Quote fetch failed");
+      
+      quote=await yahooFinance.quote(`${symbol}` + '.BO')
+      if(!quote){
+        throw new ApiError(400, "Quote fetch failed");
+      }
     }
     const price = quote.regularMarketPrice;
     const user = await db
@@ -217,8 +221,9 @@ const Polldata = async (order: StockOrder) => {
     if (user.length === 0) {
       throw new ApiError(404, "User not found");
     }
-
-    if (price >= Number(order.price) && order.order_type === "Sell") {
+    
+    if (price >= Number(order.price) && order.order_type === "SELL") {
+      
       const req = {
         body: {
           stock_name: symbol,
@@ -250,7 +255,8 @@ const Polldata = async (order: StockOrder) => {
         })
         .where(eq(Orders.id, order.id));
       return "COMPLETED";
-    } else if (price <= Number(order.price) && order.order_type === "Buy") {
+    } else if (price <= Number(order.price) && order.order_type === "BUY") {
+     
       const req = {
         body: {
           stock_name: symbol,

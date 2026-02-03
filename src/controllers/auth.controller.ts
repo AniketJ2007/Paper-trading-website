@@ -1,6 +1,6 @@
 import asynchandler from "../utils/asynchandler.js";
 import { Users } from "../db/schema.js";
-import { db } from "../index.js";
+import { db } from "../db/index.js";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import { Request, Response } from "express";

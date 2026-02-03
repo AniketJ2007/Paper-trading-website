@@ -1,16 +1,20 @@
 import { Polldata } from "./apidata.controller.js";
 import { Orders } from "../db/schema.js";
-import { db } from "../index.js";
+import { db } from "../db/index.js";
 import { eq } from "drizzle-orm";
 const checkTime = () => {
     const now = new Date();
-    const istTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
-    const day = istTime.getDay();
-    if (day === 6 || day === 0)
+    const options = { timeZone: "Asia/Kolkata", hour12: false, weekday: 'long', hour: 'numeric', minute: 'numeric' };
+    const formatter = new Intl.DateTimeFormat("en-US", options);
+    const parts = formatter.formatToParts(now);
+    const getPart = (type) => parts.find(p => p.type === type).value;
+    const day = getPart('weekday');
+    const hour = parseInt(getPart('hour'), 10);
+    const minute = parseInt(getPart('minute'), 10);
+    if (day === "Sat" || day === "Sun") {
         return false;
-    const hours = istTime.getHours();
-    const minutes = istTime.getMinutes();
-    const currentMinutes = hours * 60 + minutes;
+    }
+    const currentMinutes = hour * 60 + minute;
     const marketOpen = 9 * 60 + 15;
     const marketClose = 15 * 60 + 30;
     return currentMinutes >= marketOpen && currentMinutes <= marketClose;
@@ -50,7 +54,6 @@ function startPolling() {
     setInterval(async () => {
         if (!checkTime())
             return;
-        console.log('Polled 60 secs');
         for (const [id, order] of sixty_secs) {
             const res = await Polldata(order);
             if (res === "COMPLETED") {
@@ -72,7 +75,6 @@ function startPolling() {
     setInterval(async () => {
         if (!checkTime())
             return;
-        console.log('Polled 120 secs');
         for (const [id, order] of two_mins) {
             const res = await Polldata(order);
             if (res === "COMPLETED") {
@@ -94,7 +96,6 @@ function startPolling() {
     setInterval(async () => {
         if (!checkTime())
             return;
-        console.log('Polled 300 secs');
         for (const [id, order] of five_mins) {
             const res = await Polldata(order);
             if (res === "COMPLETED") {
@@ -126,6 +127,6 @@ function startPolling() {
         two_mins.clear();
         five_mins.clear();
         await initQueues();
-    }, 150000);
+    }, 600000);
 }
 export { startPolling };

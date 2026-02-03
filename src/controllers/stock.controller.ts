@@ -8,7 +8,7 @@ import {
 import { Request, Response } from "express";
 import asynchandler from "../utils/asynchandler.js";
 import { ApiError } from "../utils/ApiError.js";
-import { db } from "../index.js";
+import { db } from "../db/index.js";
 import { and, eq, sql } from "drizzle-orm";
 interface ApiRequest extends Request {
   user?: {

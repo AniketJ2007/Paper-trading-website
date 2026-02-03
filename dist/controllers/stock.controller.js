@@ -1,7 +1,7 @@
 import { Holdings, Orders, Transactions, Users, Watchlists, } from "../db/schema.js";
 import asynchandler from "../utils/asynchandler.js";
 import { ApiError } from "../utils/ApiError.js";
-import { db } from "../index.js";
+import { db } from "../db/index.js";
 import { and, eq, sql } from "drizzle-orm";
 const BuyNormal = asynchandler(async (req, res) => {
     const { stock_name, quantity, curr_price } = req.body;

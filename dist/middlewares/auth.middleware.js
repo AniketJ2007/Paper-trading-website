@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import asynchandler from '../utils/asynchandler.js';
 import { ApiError } from '../utils/ApiError.js';
 import { Users } from '../db/schema.js';
-import { db } from '../index.js';
+import { db } from '../db/index.js';
 import { eq } from 'drizzle-orm';
 const verifyJwt = asynchandler(async (req, res, next) => {
     var _a, _b, _c;

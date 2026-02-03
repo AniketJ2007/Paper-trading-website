@@ -1,17 +1,9 @@
 import e, { json, urlencoded } from 'express';
 import userrouter from "./routes/auth.routes.js";
 import stockrouter from "./routes/stock.routes.js";
-import { neon } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-http';
-import dotenv from 'dotenv';
 import cookieparser from 'cookie-parser';
 import { startPolling } from './controllers/limitorder.controller.js';
 import cors from 'cors';
-dotenv.config({
-    path: './.env',
-});
-const sql = neon(process.env.DATABASE_URL);
-const db = drizzle(sql);
 const app = e();
 const corsOptions = {
     origin: ['https://papertradingfrontend.vercel.app',
@@ -33,8 +25,5 @@ app.get('/', (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server is running port ${3000}`);
-    setTimeout(() => {
-        startPolling();
-    }, 15000);
+    startPolling();
 });
-export { db };

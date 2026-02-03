@@ -3,7 +3,7 @@ import asynchandler from '../utils/asynchandler.js';
 import { ApiError } from '../utils/ApiError.js';
 import { Users } from '../db/schema.js';
 import { Request,Response ,NextFunction} from 'express';
-import { db } from '../index.js';
+import { db } from '../db/index.js';
 import { eq } from 'drizzle-orm';
 interface ApiRequest extends Request{
     user?: {
