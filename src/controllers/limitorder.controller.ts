@@ -56,6 +56,7 @@ function startPolling(){
   initQueues()
   setInterval(async () => {
   if (!checkTime()) return;
+  console.log("one min");
   for (const [id, order] of sixty_secs) {
     const res = await Polldata(order);
     if (res === "COMPLETED") {
@@ -75,7 +76,7 @@ function startPolling(){
 }, 60000);
 setInterval(async () => {
   if (!checkTime()) return;
-  
+  console.log("two mins");
   for (const [id, order] of two_mins) {
     const res = await Polldata(order);
     if (res === "COMPLETED") {
@@ -96,6 +97,8 @@ setInterval(async () => {
 setInterval(async () => {
   if (!checkTime()) return;
   for (const [id, order] of five_mins) {
+    console.log("Five mins");
+    
     const res = await Polldata(order);
     if (res === "COMPLETED") {
       five_mins.delete(id);
